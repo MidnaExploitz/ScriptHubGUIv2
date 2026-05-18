@@ -1,0 +1,1513 @@
+-- FROZXCUTOR v1.2
+-- LocalScript → StarterPlayerScripts
+-- RightAlt = toggle | Drag titlebar to move
+
+local Players          = game:GetService("Players")
+local TweenService     = game:GetService("TweenService")
+local RunService       = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local SoundService     = game:GetService("SoundService")
+
+local player    = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid  = character:WaitForChild("Humanoid")
+local animator  = humanoid:WaitForChild("Animator")
+
+-- ══════════════════════════════════════════════════════
+--  EMOTES
+-- ══════════════════════════════════════════════════════
+local EMOTES = {
+    { id = "rbxassetid://117991470645633", name = "DWYEC"             },
+    { id = "rbxassetid://125122407973000", name = "Ass Shake"         },
+    { id = "rbxassetid://91668361249766",  name = "PacMan Ghost"      },
+    { id = "rbxassetid://118424088638426", name = "Swinging Shake"    },
+    { id = "rbxassetid://110994920501493", name = "Tongue Out"        },
+    { id = "rbxassetid://83341137622668",  name = "Mid Bend"          },
+    { id = "rbxassetid://114603395814889", name = "Hip Sway"          },
+    { id = "rbxassetid://91533128194560",  name = "Shaking Yams"      },
+}
+
+-- ══════════════════════════════════════════════════════
+--  MODIFIED EMOTES  (each has a loopStart and loopEnd in seconds)
+-- ══════════════════════════════════════════════════════
+local MOD_EMOTES = {
+    { id = "rbxassetid://138863650838971", name = "Laying Thrust", loopStart = 1.4, loopEnd = 2.9 },
+    { id = "rbxassetid://94864314758557", name = "Laying Dick Suck", loopStart = 1.77, loopEnd = 2.27 },
+    { id = "rbxassetid://104096083663641", name = "Ass Shake", loopStart = 0, loopEnd = 1.07 },
+    { id = "rbxassetid://134053180813311", name = "Bend Over", loopStart = 2.78, loopEnd = 5.8 },
+    { id = "rbxassetid://126177622345379", name = "Normal Thrust", loopStart = 1.17, loopEnd = 5.2 },
+    { id = "rbxassetid://98126345395357", name = "Show Pussy", loopStart = 1.19, loopEnd = 1.31 },
+    { id = "rbxassetid://128045598388929", name = "Cheer Leader", loopStart = 0, loopEnd = 3.5 },
+}
+
+-- ══════════════════════════════════════════════════════
+--  MUSIC  (Roblox audio asset IDs)
+-- ══════════════════════════════════════════════════════
+local MUSIC = {
+    { id = "rbxassetid://1836455943", name = "Surrender" },
+}
+
+-- ══════════════════════════════════════════════════════
+--  SCRIPTS
+-- ══════════════════════════════════════════════════════
+local SCRIPTS = {
+    { name = "Sun God FE",               desc = "Loads The Sun God Script, press C for controls",                                        url = "https://raw.githubusercontent.com/MidnaExploitz/Sun-God-FE/refs/heads/main/SunGodFeV2" },
+    { name = "NDS Antifling",            desc = "makes it so skids cannot fling you",                                                   url = "https://pastebin.com/raw/i51rCr7C" },
+    { name = "NDS Anti Fall Damage",     desc = "makes it so you cannot take fall damage",                                              url = "https://pastebin.com/raw/4af6hqSF" },
+    { name = "NDS Sound Deleter",        desc = "DELETES AMBIENT SOUNDS",                                                               url = "https://pastebin.com/raw/BZn6A7aN" },
+    { name = "Bat Fly Script",           desc = "Press F to fly, Shift to go down, Space to go up",                                     url = "https://pastebin.com/raw/G2Fm0UbG" },
+    { name = "RAKE FE ANIMS",            desc = "Make Sure you're in Rake Remaster!",                                                   url = "https://pastebin.com/raw/bT3ecduf" },
+    { name = "Please Donate Nuke",       desc = "Press F to Launch — MAKE SURE YOU'RE IN PLEASE DONATE",                               url = "https://pastebin.com/raw/YeZXauSv" },
+    { name = "RAHH FE",                  desc = "Press B to do it",                                                                     url = "https://pastebin.com/raw/Khyys5gZ" },
+    { name = "Infinite Yield",           desc = "The Classic",                                                                          url = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source" },
+    { name = "R6 Anims",                 desc = "Makes R15 anims look like R6",                                                         url = "https://raw.githubusercontent.com/Imagnir/r6_anims_for_r15/main/r6_anims.lua" },
+    { name = "FE DropKick",              desc = "PC ONLY — make sure you're in NDS",                                                    url = "https://raw.githubusercontent.com/platinww/CrustyMain/refs/heads/main/universal/DropKick.lua" },
+    { name = "FE Block Mover",           desc = "PC ONLY — hover over unanchored block, then press the first block",                    url = "https://raw.githubusercontent.com/axionscripts1/Move-Blocos-V17/refs/heads/main/README.md" },
+    { name = "FE Both Sides",            desc = "PC ONLY — wear a right-hand holdable sword accessory or layered clothing",             url = "https://pastebin.com/raw/09sKviec" },
+    { name = "RTX Shaders",              desc = "Omg pretty",                                                                           url = "https://pastebin.com/raw/8c7tiqHF" },
+    { name = "FE Captain Trotter (WIP)", desc = "Mobile & PC — auto uses dropkick for flinging",                                       url = "https://pastebin.com/raw/jj6YkCp0" },
+}
+
+-- ══════════════════════════════════════════════════════
+--  COLOURS  (cyan + black)
+-- ══════════════════════════════════════════════════════
+local C = {
+    black   = Color3.fromRGB(0,   0,   0  ),
+    bg      = Color3.fromRGB(4,   4,   4  ),
+    panel   = Color3.fromRGB(9,   9,   9  ),
+    rowA    = Color3.fromRGB(6,   6,   6  ),
+    rowB    = Color3.fromRGB(11,  11,  11 ),
+    rowHov  = Color3.fromRGB(20,  20,  20 ),
+    cyan    = Color3.fromRGB(0,   255, 255),
+    cyanDk  = Color3.fromRGB(0,   140, 140),
+    cyanDim = Color3.fromRGB(0,   35,  40 ),
+    white   = Color3.fromRGB(230, 230, 230),
+    muted   = Color3.fromRGB(75,  75,  75 ),
+    divider = Color3.fromRGB(22,  22,  22 ),
+}
+C.red     = C.cyan
+C.redDark = C.cyanDk
+C.redDim  = C.cyanDim
+C.white3  = C.muted
+
+-- ══════════════════════════════════════════════════════
+--  STATE
+-- ══════════════════════════════════════════════════════
+local currentTrack   = nil
+local activeEmote    = nil
+local eLoopMode      = true
+local animSpeed      = 1.0
+
+-- Modified emote state
+local modTrack       = nil       -- AnimationTrack for modified emote
+local modEmote       = nil       -- which MOD_EMOTE is active
+local modLoopConn    = nil       -- Heartbeat connection for custom loop
+local modCardRefs    = {}
+
+local currentSound   = nil
+local activeMusic    = nil
+local musicRefs      = {}
+
+local isDragging     = false
+local dragOffset     = Vector2.new()
+local sliderDrag     = false
+local cardRefs       = {}
+local currentTab     = "home"
+
+-- Emotes sub-tab state
+local emotesSubTab   = "normal"  -- "normal" | "modified"
+
+-- ══════════════════════════════════════════════════════
+--  FREEZE / EMOTE PLAYBACK
+-- ══════════════════════════════════════════════════════
+local function freezePlayer(frozen)
+    if humanoid then
+        humanoid.WalkSpeed = frozen and 0 or 16
+        humanoid.JumpPower = frozen and 0 or 50
+    end
+end
+
+local function stopCurrent()
+    if currentTrack then
+        currentTrack:Stop(0.15)
+        currentTrack:Destroy()
+        currentTrack = nil
+    end
+    activeEmote = nil
+    freezePlayer(false)
+end
+
+local function stopModEmote()
+    if modLoopConn then
+        modLoopConn:Disconnect()
+        modLoopConn = nil
+    end
+    if modTrack then
+        modTrack:Stop(0.15)
+        modTrack:Destroy()
+        modTrack = nil
+    end
+    modEmote = nil
+    freezePlayer(false)
+end
+
+local function playEmote(emote, loop)
+    stopCurrent()
+    stopModEmote()
+    local anim = Instance.new("Animation")
+    anim.AnimationId = emote.id
+    local track = animator:LoadAnimation(anim)
+    track.Looped = loop
+    track:AdjustSpeed(animSpeed)
+    track:Play(0.15)
+    currentTrack = track
+    activeEmote  = emote
+    anim:Destroy()
+    freezePlayer(true)
+    if not loop then
+        track.Stopped:Connect(function()
+            activeEmote = nil
+            freezePlayer(false)
+        end)
+    end
+end
+
+-- Play a modified emote: starts at loopStart, loops back when hitting loopEnd
+local function playModEmote(me)
+    stopCurrent()
+    stopModEmote()
+
+    local anim = Instance.new("Animation")
+    anim.AnimationId = me.id
+    local track = animator:LoadAnimation(anim)
+    track.Looped = false  -- we handle looping ourselves
+    track:AdjustSpeed(animSpeed)
+    track:Play(0.15)
+    -- Jump to the start position right away
+    task.defer(function()
+        if track and track.IsPlaying then
+            track.TimePosition = me.loopStart
+        end
+    end)
+
+    modTrack = track
+    modEmote = me
+    freezePlayer(true)
+
+    -- Custom loop: when TimePosition reaches loopEnd, reset to loopStart
+    modLoopConn = RunService.Heartbeat:Connect(function()
+        if not modTrack or not modTrack.IsPlaying then
+            -- Track ended naturally (shorter than loopEnd), restart
+            if modEmote then
+                local anim2 = Instance.new("Animation")
+                anim2.AnimationId = modEmote.id
+                local t2 = animator:LoadAnimation(anim2)
+                t2.Looped = false
+                t2:AdjustSpeed(animSpeed)
+                t2:Play(0.15)
+                task.defer(function()
+                    if t2 and t2.IsPlaying then t2.TimePosition = modEmote.loopStart end
+                end)
+                modTrack = t2
+                anim2:Destroy()
+            end
+            return
+        end
+        if modTrack.TimePosition >= me.loopEnd then
+            modTrack.TimePosition = me.loopStart
+        end
+    end)
+
+    anim:Destroy()
+end
+
+local function setSpeed(s)
+    animSpeed = math.clamp(s, 0.1, 3.0)
+    if currentTrack then currentTrack:AdjustSpeed(animSpeed) end
+    if modTrack     then modTrack:AdjustSpeed(animSpeed)     end
+end
+
+-- ══════════════════════════════════════════════════════
+--  MUSIC PLAYBACK
+-- ══════════════════════════════════════════════════════
+local function stopMusic()
+    if currentSound then
+        currentSound:Stop()
+        currentSound:Destroy()
+        currentSound = nil
+    end
+    activeMusic = nil
+end
+
+local function playMusic(track)
+    stopMusic()
+    local snd = Instance.new("Sound", SoundService)
+    snd.SoundId = track.id
+    snd.Volume  = 0.6
+    snd.Looped  = true
+    snd:Play()
+    currentSound = snd
+    activeMusic  = track
+end
+
+-- ══════════════════════════════════════════════════════
+--  HELPERS
+-- ══════════════════════════════════════════════════════
+local function makeCorner(parent, radius)
+    local c = Instance.new("UICorner", parent)
+    c.CornerRadius = UDim.new(0, radius or 6)
+    return c
+end
+
+local function makeStroke(parent, color, thick, trans)
+    local s = Instance.new("UIStroke", parent)
+    s.Color        = color or C.divider
+    s.Thickness    = thick or 1
+    s.Transparency = trans or 0
+    return s
+end
+
+-- ══════════════════════════════════════════════════════
+--  SCREEN GUI
+-- ══════════════════════════════════════════════════════
+local SG = Instance.new("ScreenGui")
+SG.Name           = "FrozxcutorHub"
+SG.ResetOnSpawn   = false
+SG.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+SG.IgnoreGuiInset = true
+SG.Parent         = player:WaitForChild("PlayerGui")
+
+-- ── LOADING SCREEN ────────────────────────────────────
+local LoadFrame = Instance.new("Frame", SG)
+LoadFrame.Size             = UDim2.new(1,0,1,0)
+LoadFrame.BackgroundColor3 = C.black
+LoadFrame.BorderSizePixel  = 0
+LoadFrame.ZIndex           = 100
+
+local LoadTitle = Instance.new("TextLabel", LoadFrame)
+LoadTitle.Text               = "frozxcutor"
+LoadTitle.TextSize           = 26
+LoadTitle.Font               = Enum.Font.GothamBold
+LoadTitle.TextColor3         = C.cyan
+LoadTitle.BackgroundTransparency = 1
+LoadTitle.Size               = UDim2.new(0,300,0,36)
+LoadTitle.Position           = UDim2.new(0.5,-150,0.5,-54)
+LoadTitle.TextXAlignment     = Enum.TextXAlignment.Center
+LoadTitle.ZIndex             = 101
+
+local LoadSub = Instance.new("TextLabel", LoadFrame)
+LoadSub.Text               = "loading..."
+LoadSub.TextSize           = 12
+LoadSub.Font               = Enum.Font.Gotham
+LoadSub.TextColor3         = C.muted
+LoadSub.BackgroundTransparency = 1
+LoadSub.Size               = UDim2.new(0,300,0,20)
+LoadSub.Position           = UDim2.new(0.5,-150,0.5,-12)
+LoadSub.TextXAlignment     = Enum.TextXAlignment.Center
+LoadSub.ZIndex             = 101
+
+local BarTrack = Instance.new("Frame", LoadFrame)
+BarTrack.Size             = UDim2.new(0,220,0,3)
+BarTrack.Position         = UDim2.new(0.5,-110,0.5,22)
+BarTrack.BackgroundColor3 = Color3.fromRGB(20,20,20)
+BarTrack.BorderSizePixel  = 0
+BarTrack.ZIndex           = 101
+makeCorner(BarTrack,2)
+
+local BarFill = Instance.new("Frame", BarTrack)
+BarFill.Size             = UDim2.new(0,0,1,0)
+BarFill.BackgroundColor3 = C.cyan
+BarFill.BorderSizePixel  = 0
+BarFill.ZIndex           = 102
+makeCorner(BarFill,2)
+
+-- ── MAIN WINDOW ───────────────────────────────────────
+local Win = Instance.new("Frame", SG)
+Win.Name             = "Win"
+Win.Size             = UDim2.new(0,420,0,640)
+Win.Position         = UDim2.new(0.5,-210,0.5,-320)
+Win.BackgroundColor3 = C.bg
+Win.BorderSizePixel  = 0
+Win.ClipsDescendants = true
+Win.Visible          = false
+makeCorner(Win,10)
+makeStroke(Win, C.cyan, 1, 0.55)
+
+-- ── TITLE BAR ─────────────────────────────────────────
+local TitleBar = Instance.new("Frame", Win)
+TitleBar.Size             = UDim2.new(1,0,0,54)
+TitleBar.BackgroundColor3 = C.black
+TitleBar.BorderSizePixel  = 0
+TitleBar.ZIndex           = 5
+
+local TitleAccent = Instance.new("Frame", TitleBar)
+TitleAccent.Size             = UDim2.new(0,3,1,0)
+TitleAccent.BackgroundColor3 = C.cyan
+TitleAccent.BorderSizePixel  = 0
+
+local TitleName = Instance.new("TextLabel", TitleBar)
+TitleName.Text               = "frozxcutor"
+TitleName.Font               = Enum.Font.GothamBold
+TitleName.TextSize           = 17
+TitleName.TextColor3         = C.white
+TitleName.BackgroundTransparency = 1
+TitleName.Size               = UDim2.new(1,-80,0,28)
+TitleName.Position           = UDim2.new(0,18,0,6)
+TitleName.TextXAlignment     = Enum.TextXAlignment.Left
+TitleName.ZIndex             = 6
+
+local TitleSub = Instance.new("TextLabel", TitleBar)
+TitleSub.Text               = "dance edition  •  v1.2"
+TitleSub.Font               = Enum.Font.Gotham
+TitleSub.TextSize           = 10
+TitleSub.TextColor3         = C.muted
+TitleSub.BackgroundTransparency = 1
+TitleSub.Size               = UDim2.new(1,-80,0,16)
+TitleSub.Position           = UDim2.new(0,18,0,32)
+TitleSub.TextXAlignment     = Enum.TextXAlignment.Left
+TitleSub.ZIndex             = 6
+
+local MinBtn = Instance.new("TextButton", TitleBar)
+MinBtn.Text             = "—"
+MinBtn.Font             = Enum.Font.GothamBold
+MinBtn.TextSize         = 14
+MinBtn.TextColor3       = C.muted
+MinBtn.BackgroundColor3 = Color3.fromRGB(18,18,18)
+MinBtn.Size             = UDim2.new(0,30,0,30)
+MinBtn.Position         = UDim2.new(1,-40,0.5,-15)
+MinBtn.BorderSizePixel  = 0
+MinBtn.ZIndex           = 7
+makeCorner(MinBtn, 5)
+MinBtn.MouseButton1Click:Connect(function() Win.Visible = false end)
+
+-- ── DRAG (titlebar only) ──────────────────────────────
+UserInputService.InputBegan:Connect(function(inp, gp)
+    if gp then return end
+    if inp.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+    local mp  = UserInputService:GetMouseLocation()
+    local pos = TitleBar.AbsolutePosition
+    local sz  = TitleBar.AbsoluteSize
+    if mp.X >= pos.X and mp.X <= pos.X + sz.X
+    and mp.Y >= pos.Y and mp.Y <= pos.Y + sz.Y then
+        isDragging = true
+        dragOffset = mp - Vector2.new(Win.AbsolutePosition.X, Win.AbsolutePosition.Y)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(inp)
+    if isDragging and inp.UserInputType == Enum.UserInputType.MouseMovement then
+        local mp = UserInputService:GetMouseLocation()
+        local p  = mp - dragOffset
+        Win.Position = UDim2.new(0, p.X, 0, p.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(inp)
+    if inp.UserInputType == Enum.UserInputType.MouseButton1 then
+        isDragging = false
+    end
+end)
+
+-- ── TAB BAR ───────────────────────────────────────────
+local TabBar = Instance.new("Frame", Win)
+TabBar.Size             = UDim2.new(1,0,0,40)
+TabBar.Position         = UDim2.new(0,0,0,54)
+TabBar.BackgroundColor3 = Color3.fromRGB(6,6,6)
+TabBar.BorderSizePixel  = 0
+TabBar.ZIndex           = 5
+
+local TabDivLine = Instance.new("Frame", Win)
+TabDivLine.Size             = UDim2.new(1,0,0,1)
+TabDivLine.Position         = UDim2.new(0,0,0,94)
+TabDivLine.BackgroundColor3 = C.divider
+TabDivLine.BorderSizePixel  = 0
+TabDivLine.ZIndex           = 5
+
+local TabIndicator = Instance.new("Frame", TabBar)
+TabIndicator.Size             = UDim2.new(0,80,0,2)
+TabIndicator.Position         = UDim2.new(0,10,1,-2)
+TabIndicator.BackgroundColor3 = C.cyan
+TabIndicator.BorderSizePixel  = 0
+TabIndicator.ZIndex           = 6
+
+Instance.new("UIListLayout", TabBar).FillDirection = Enum.FillDirection.Horizontal
+
+local function makeTabBtn(name)
+    local btn = Instance.new("TextButton", TabBar)
+    btn.Text               = name
+    btn.Font               = Enum.Font.GothamBold
+    btn.TextSize           = 12
+    btn.TextColor3         = C.muted
+    btn.BackgroundTransparency = 1
+    btn.Size               = UDim2.new(0,100,1,0)
+    btn.BorderSizePixel    = 0
+    btn.ZIndex             = 6
+    return btn
+end
+
+local HomeTabBtn    = makeTabBtn("HOME")
+local EmotesTabBtn  = makeTabBtn("EMOTES")
+local ScriptsTabBtn = makeTabBtn("SCRIPTS")
+
+-- ── CONTENT AREA ──────────────────────────────────────
+local Content = Instance.new("Frame", Win)
+Content.Size               = UDim2.new(1,0,1,-95)
+Content.Position           = UDim2.new(0,0,0,95)
+Content.BackgroundTransparency = 1
+Content.ClipsDescendants   = true
+
+-- ══════════════════════════════════════════════════════
+--  HOME PAGE
+-- ══════════════════════════════════════════════════════
+local HomePage = Instance.new("Frame", Content)
+HomePage.Size              = UDim2.new(1,0,1,0)
+HomePage.BackgroundTransparency = 1
+
+local HomePad = Instance.new("UIPadding", HomePage)
+HomePad.PaddingLeft  = UDim.new(0,14)
+HomePad.PaddingRight = UDim.new(0,14)
+HomePad.PaddingTop   = UDim.new(0,12)
+
+local HomeList = Instance.new("UIListLayout", HomePage)
+HomeList.FillDirection = Enum.FillDirection.Vertical
+HomeList.Padding       = UDim.new(0,10)
+
+-- WELCOME CARD
+local WelcomeCard = Instance.new("Frame", HomePage)
+WelcomeCard.Size             = UDim2.new(1,0,0,80)
+WelcomeCard.BackgroundColor3 = C.panel
+WelcomeCard.BorderSizePixel  = 0
+makeCorner(WelcomeCard,8)
+makeStroke(WelcomeCard, C.divider, 1)
+
+local WelcomeAccent = Instance.new("Frame", WelcomeCard)
+WelcomeAccent.Size             = UDim2.new(0,3,1,0)
+WelcomeAccent.BackgroundColor3 = C.cyan
+WelcomeAccent.BorderSizePixel  = 0
+makeCorner(WelcomeAccent,2)
+
+local AvatarImg = Instance.new("ImageLabel", WelcomeCard)
+AvatarImg.Size             = UDim2.new(0,54,0,54)
+AvatarImg.Position         = UDim2.new(0,14,0.5,-27)
+AvatarImg.BackgroundColor3 = Color3.fromRGB(16,16,16)
+AvatarImg.BorderSizePixel  = 0
+AvatarImg.Image            = "https://www.roblox.com/headshot-thumbnail/image?userId="..player.UserId.."&width=150&height=150&format=png"
+makeCorner(AvatarImg,27)
+makeStroke(AvatarImg, C.cyan, 1, 0.4)
+
+local WelcomeLbl = Instance.new("TextLabel", WelcomeCard)
+WelcomeLbl.Text               = "welcome back,"
+WelcomeLbl.Font               = Enum.Font.Gotham
+WelcomeLbl.TextSize           = 11
+WelcomeLbl.TextColor3         = C.muted
+WelcomeLbl.BackgroundTransparency = 1
+WelcomeLbl.Size               = UDim2.new(1,-90,0,16)
+WelcomeLbl.Position           = UDim2.new(0,78,0,14)
+WelcomeLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+local UsernameLbl = Instance.new("TextLabel", WelcomeCard)
+UsernameLbl.Text               = player.DisplayName
+UsernameLbl.Font               = Enum.Font.GothamBold
+UsernameLbl.TextSize           = 16
+UsernameLbl.TextColor3         = C.white
+UsernameLbl.BackgroundTransparency = 1
+UsernameLbl.Size               = UDim2.new(1,-90,0,22)
+UsernameLbl.Position           = UDim2.new(0,78,0,28)
+UsernameLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+local TimeLbl = Instance.new("TextLabel", WelcomeCard)
+TimeLbl.Text               = "00:00:00"
+TimeLbl.Font               = Enum.Font.GothamBold
+TimeLbl.TextSize           = 11
+TimeLbl.TextColor3         = C.cyan
+TimeLbl.BackgroundTransparency = 1
+TimeLbl.Size               = UDim2.new(1,-90,0,16)
+TimeLbl.Position           = UDim2.new(0,78,0,54)
+TimeLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+RunService.Heartbeat:Connect(function()
+    local t = os.date("*t")
+    local h = t.hour; local ampm = h >= 12 and "PM" or "AM"
+    h = h % 12; if h == 0 then h = 12 end
+    TimeLbl.Text = string.format("%02d:%02d:%02d %s", h, t.min, t.sec, ampm)
+end)
+
+-- NOW PLAYING card (home)
+local NPCard = Instance.new("Frame", HomePage)
+NPCard.Size             = UDim2.new(1,0,0,64)
+NPCard.BackgroundColor3 = C.panel
+NPCard.BorderSizePixel  = 0
+makeCorner(NPCard,8)
+makeStroke(NPCard, C.divider, 1)
+
+local NPAccent = Instance.new("Frame", NPCard)
+NPAccent.Size             = UDim2.new(0,3,1,0)
+NPAccent.BackgroundColor3 = C.cyan
+NPAccent.BorderSizePixel  = 0
+makeCorner(NPAccent,2)
+
+local NPTagLbl = Instance.new("TextLabel", NPCard)
+NPTagLbl.Text               = "NOW PLAYING"
+NPTagLbl.Font               = Enum.Font.GothamBold
+NPTagLbl.TextSize           = 9
+NPTagLbl.TextColor3         = C.muted
+NPTagLbl.BackgroundTransparency = 1
+NPTagLbl.Size               = UDim2.new(0.7,0,0,16)
+NPTagLbl.Position           = UDim2.new(0,18,0,8)
+NPTagLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+local NPDot = Instance.new("Frame", NPCard)
+NPDot.Size             = UDim2.new(0,7,0,7)
+NPDot.Position         = UDim2.new(0,18,0,32)
+NPDot.BackgroundColor3 = C.muted
+NPDot.BorderSizePixel  = 0
+makeCorner(NPDot,4)
+
+local NPNameLbl = Instance.new("TextLabel", NPCard)
+NPNameLbl.Text               = "idle"
+NPNameLbl.Font               = Enum.Font.GothamBold
+NPNameLbl.TextSize           = 14
+NPNameLbl.TextColor3         = C.white
+NPNameLbl.BackgroundTransparency = 1
+NPNameLbl.Size               = UDim2.new(0.65,0,0,20)
+NPNameLbl.Position           = UDim2.new(0,30,0,26)
+NPNameLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+-- LOOP MODE card (home, synced)
+local HLoopCard = Instance.new("Frame", HomePage)
+HLoopCard.Size             = UDim2.new(1,0,0,44)
+HLoopCard.BackgroundColor3 = C.panel
+HLoopCard.BorderSizePixel  = 0
+makeCorner(HLoopCard,8)
+makeStroke(HLoopCard, C.divider, 1)
+
+local HLoopAccent = Instance.new("Frame", HLoopCard)
+HLoopAccent.Size             = UDim2.new(0,3,1,0)
+HLoopAccent.BackgroundColor3 = C.cyan
+HLoopAccent.BorderSizePixel  = 0
+makeCorner(HLoopAccent,2)
+
+local HLoopTag = Instance.new("TextLabel", HLoopCard)
+HLoopTag.Text               = "EMOTE MODE"
+HLoopTag.Font               = Enum.Font.GothamBold
+HLoopTag.TextSize           = 9
+HLoopTag.TextColor3         = C.muted
+HLoopTag.BackgroundTransparency = 1
+HLoopTag.Size               = UDim2.new(0,100,1,0)
+HLoopTag.Position           = UDim2.new(0,18,0,0)
+HLoopTag.TextXAlignment     = Enum.TextXAlignment.Left
+
+local HLoopBtn = Instance.new("TextButton", HLoopCard)
+HLoopBtn.Text             = "LOOP"
+HLoopBtn.Font             = Enum.Font.GothamBold
+HLoopBtn.TextSize         = 11
+HLoopBtn.TextColor3       = C.white
+HLoopBtn.BackgroundColor3 = C.cyanDim
+HLoopBtn.Size             = UDim2.new(0,70,0,28)
+HLoopBtn.Position         = UDim2.new(1,-158,0.5,-14)
+HLoopBtn.BorderSizePixel  = 0
+makeCorner(HLoopBtn,5)
+makeStroke(HLoopBtn, C.cyan, 1, 0.3)
+
+local HOnceBtn = Instance.new("TextButton", HLoopCard)
+HOnceBtn.Text             = "ONCE"
+HOnceBtn.Font             = Enum.Font.GothamBold
+HOnceBtn.TextSize         = 11
+HOnceBtn.TextColor3       = C.muted
+HOnceBtn.BackgroundColor3 = Color3.fromRGB(18,18,18)
+HOnceBtn.Size             = UDim2.new(0,70,0,28)
+HOnceBtn.Position         = UDim2.new(1,-82,0.5,-14)
+HOnceBtn.BorderSizePixel  = 0
+makeCorner(HOnceBtn,5)
+makeStroke(HOnceBtn, C.divider, 1)
+
+-- SPEED card
+local SpeedCard = Instance.new("Frame", HomePage)
+SpeedCard.Size             = UDim2.new(1,0,0,72)
+SpeedCard.BackgroundColor3 = C.panel
+SpeedCard.BorderSizePixel  = 0
+makeCorner(SpeedCard,8)
+makeStroke(SpeedCard, C.divider, 1)
+
+local SpeedAccent = Instance.new("Frame", SpeedCard)
+SpeedAccent.Size             = UDim2.new(0,3,1,0)
+SpeedAccent.BackgroundColor3 = C.cyan
+SpeedAccent.BorderSizePixel  = 0
+makeCorner(SpeedAccent,2)
+
+local SpeedTagLbl = Instance.new("TextLabel", SpeedCard)
+SpeedTagLbl.Text               = "ANIM SPEED"
+SpeedTagLbl.Font               = Enum.Font.GothamBold
+SpeedTagLbl.TextSize           = 9
+SpeedTagLbl.TextColor3         = C.muted
+SpeedTagLbl.BackgroundTransparency = 1
+SpeedTagLbl.Size               = UDim2.new(0,80,0,14)
+SpeedTagLbl.Position           = UDim2.new(0,18,0,8)
+SpeedTagLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+local SpeedNumLbl = Instance.new("TextLabel", SpeedCard)
+SpeedNumLbl.Text             = "1.0×"
+SpeedNumLbl.Font             = Enum.Font.GothamBold
+SpeedNumLbl.TextSize         = 20
+SpeedNumLbl.TextColor3       = C.cyan
+SpeedNumLbl.BackgroundTransparency = 1
+SpeedNumLbl.Size             = UDim2.new(0,62,0,26)
+SpeedNumLbl.Position         = UDim2.new(0,18,0,20)
+SpeedNumLbl.TextXAlignment   = Enum.TextXAlignment.Left
+
+local SliderTrack = Instance.new("Frame", SpeedCard)
+SliderTrack.Size             = UDim2.new(1,-26,0,6)
+SliderTrack.Position         = UDim2.new(0,18,0,52)
+SliderTrack.BackgroundColor3 = Color3.fromRGB(22,22,22)
+SliderTrack.BorderSizePixel  = 0
+makeCorner(SliderTrack,3)
+
+local SliderFill = Instance.new("Frame", SliderTrack)
+SliderFill.Size             = UDim2.new(0.31,0,1,0)
+SliderFill.BackgroundColor3 = C.cyan
+SliderFill.BorderSizePixel  = 0
+makeCorner(SliderFill,3)
+
+local SliderKnob = Instance.new("TextButton", SliderTrack)
+SliderKnob.Text             = ""
+SliderKnob.Size             = UDim2.new(0,16,0,16)
+SliderKnob.Position         = UDim2.new(0.31,-8,0.5,-8)
+SliderKnob.BackgroundColor3 = C.white
+SliderKnob.BorderSizePixel  = 0
+makeCorner(SliderKnob,8)
+
+SliderKnob.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then sliderDrag = true end
+end)
+UserInputService.InputChanged:Connect(function(i)
+    if sliderDrag and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local rel = math.clamp(
+            (i.Position.X - SliderTrack.AbsolutePosition.X) / SliderTrack.AbsoluteSize.X, 0, 1)
+        SliderFill.Size     = UDim2.new(rel,0,1,0)
+        SliderKnob.Position = UDim2.new(rel,-8,0.5,-8)
+        setSpeed(0.1 + rel * 2.9)
+        SpeedNumLbl.Text = string.format("%.1f×", animSpeed)
+    end
+end)
+UserInputService.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then sliderDrag = false end
+end)
+
+-- HINT card
+local HintCard = Instance.new("Frame", HomePage)
+HintCard.Size             = UDim2.new(1,0,0,30)
+HintCard.BackgroundColor3 = C.panel
+HintCard.BorderSizePixel  = 0
+makeCorner(HintCard,8)
+makeStroke(HintCard, C.divider, 1)
+
+local HintLbl = Instance.new("TextLabel", HintCard)
+HintLbl.Text               = "RightAlt to toggle  •  drag title bar to move"
+HintLbl.Font               = Enum.Font.Gotham
+HintLbl.TextSize           = 10
+HintLbl.TextColor3         = C.muted
+HintLbl.BackgroundTransparency = 1
+HintLbl.Size               = UDim2.new(1,-20,1,0)
+HintLbl.Position           = UDim2.new(0,14,0,0)
+HintLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+-- ══════════════════════════════════════════════════════
+--  EMOTES PAGE
+-- ══════════════════════════════════════════════════════
+local EmotesPage = Instance.new("Frame", Content)
+EmotesPage.Size              = UDim2.new(1,0,1,0)
+EmotesPage.BackgroundTransparency = 1
+EmotesPage.Visible           = false
+
+-- ── TOP CONTROLS ROW (loop + stop) ────────────────────
+local ETopRow = Instance.new("Frame", EmotesPage)
+ETopRow.Size              = UDim2.new(1,-28,0,34)
+ETopRow.Position          = UDim2.new(0,14,0,8)
+ETopRow.BackgroundTransparency = 1
+
+local ETL = Instance.new("UIListLayout", ETopRow)
+ETL.FillDirection = Enum.FillDirection.Horizontal
+ETL.Padding       = UDim.new(0,7)
+
+local ELoopBtn = Instance.new("TextButton", ETopRow)
+ELoopBtn.Text             = "⟳  LOOP"
+ELoopBtn.Font             = Enum.Font.GothamBold
+ELoopBtn.TextSize         = 11
+ELoopBtn.TextColor3       = C.white
+ELoopBtn.BackgroundColor3 = C.cyanDim
+ELoopBtn.Size             = UDim2.new(0,100,1,0)
+ELoopBtn.BorderSizePixel  = 0
+makeCorner(ELoopBtn,5)
+makeStroke(ELoopBtn, C.cyan, 1, 0.35)
+
+local EOnceBtn = Instance.new("TextButton", ETopRow)
+EOnceBtn.Text             = "▶  ONCE"
+EOnceBtn.Font             = Enum.Font.GothamBold
+EOnceBtn.TextSize         = 11
+EOnceBtn.TextColor3       = C.muted
+EOnceBtn.BackgroundColor3 = Color3.fromRGB(14,14,14)
+EOnceBtn.Size             = UDim2.new(0,100,1,0)
+EOnceBtn.BorderSizePixel  = 0
+makeCorner(EOnceBtn,5)
+makeStroke(EOnceBtn, C.divider, 1)
+
+local EStopBtn = Instance.new("TextButton", ETopRow)
+EStopBtn.Text             = "■  STOP"
+EStopBtn.Font             = Enum.Font.GothamBold
+EStopBtn.TextSize         = 11
+EStopBtn.TextColor3       = C.cyan
+EStopBtn.BackgroundColor3 = C.cyanDim
+EStopBtn.Size             = UDim2.new(0,88,1,0)
+EStopBtn.BorderSizePixel  = 0
+makeCorner(EStopBtn,5)
+makeStroke(EStopBtn, C.cyan, 1, 0.3)
+EStopBtn.MouseButton1Click:Connect(function()
+    stopCurrent()
+    stopModEmote()
+end)
+
+-- ── SUB-TAB ROW (Normal / Modified) ───────────────────
+local ESubTabRow = Instance.new("Frame", EmotesPage)
+ESubTabRow.Size              = UDim2.new(1,-28,0,30)
+ESubTabRow.Position          = UDim2.new(0,14,0,48)
+ESubTabRow.BackgroundColor3  = Color3.fromRGB(7,7,7)
+ESubTabRow.BorderSizePixel   = 0
+makeCorner(ESubTabRow, 7)
+makeStroke(ESubTabRow, C.divider, 1)
+
+local ESubLayout = Instance.new("UIListLayout", ESubTabRow)
+ESubLayout.FillDirection  = Enum.FillDirection.Horizontal
+ESubLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+ESubLayout.Padding        = UDim.new(0,4)
+local ESubPad = Instance.new("UIPadding", ESubTabRow)
+ESubPad.PaddingLeft  = UDim.new(0,5)
+ESubPad.PaddingRight = UDim.new(0,5)
+
+local function makeSubTabBtn(label)
+    local b = Instance.new("TextButton", ESubTabRow)
+    b.Text             = label
+    b.Font             = Enum.Font.GothamBold
+    b.TextSize         = 11
+    b.TextColor3       = C.muted
+    b.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    b.Size             = UDim2.new(0.5,-6,0,22)
+    b.BorderSizePixel  = 0
+    b.AutoButtonColor  = false
+    makeCorner(b,5)
+    return b
+end
+
+local ENormalSubBtn   = makeSubTabBtn("NORMAL")
+local EModifiedSubBtn = makeSubTabBtn("MODIFIED EMOTES")
+
+-- ── MUSIC PLAYER CARD ─────────────────────────────────
+local MusicCard = Instance.new("Frame", EmotesPage)
+MusicCard.Size             = UDim2.new(1,-28,0,100)
+MusicCard.Position         = UDim2.new(0,14,0,86)
+MusicCard.BackgroundColor3 = C.panel
+MusicCard.BorderSizePixel  = 0
+makeCorner(MusicCard,8)
+makeStroke(MusicCard, C.divider, 1)
+
+local MusicAccent = Instance.new("Frame", MusicCard)
+MusicAccent.Size             = UDim2.new(0,3,1,0)
+MusicAccent.BackgroundColor3 = C.cyan
+MusicAccent.BorderSizePixel  = 0
+makeCorner(MusicAccent,2)
+
+local MusicTag = Instance.new("TextLabel", MusicCard)
+MusicTag.Text               = "♫  MUSIC"
+MusicTag.Font               = Enum.Font.GothamBold
+MusicTag.TextSize           = 10
+MusicTag.TextColor3         = C.cyan
+MusicTag.BackgroundTransparency = 1
+MusicTag.Size               = UDim2.new(0,100,0,18)
+MusicTag.Position           = UDim2.new(0,16,0,7)
+MusicTag.TextXAlignment     = Enum.TextXAlignment.Left
+
+local MusicNowLbl = Instance.new("TextLabel", MusicCard)
+MusicNowLbl.Text               = "not playing"
+MusicNowLbl.Font               = Enum.Font.GothamBold
+MusicNowLbl.TextSize           = 13
+MusicNowLbl.TextColor3         = C.white
+MusicNowLbl.BackgroundTransparency = 1
+MusicNowLbl.Size               = UDim2.new(1,-130,0,18)
+MusicNowLbl.Position           = UDim2.new(0,16,0,27)
+MusicNowLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+local MusicStopBtn = Instance.new("TextButton", MusicCard)
+MusicStopBtn.Text             = "■ STOP"
+MusicStopBtn.Font             = Enum.Font.GothamBold
+MusicStopBtn.TextSize         = 11
+MusicStopBtn.TextColor3       = C.cyan
+MusicStopBtn.BackgroundColor3 = C.cyanDim
+MusicStopBtn.Size             = UDim2.new(0,76,0,26)
+MusicStopBtn.Position         = UDim2.new(1,-86,0,7)
+MusicStopBtn.BorderSizePixel  = 0
+makeCorner(MusicStopBtn,5)
+makeStroke(MusicStopBtn, C.cyan, 1, 0.4)
+MusicStopBtn.MouseButton1Click:Connect(function()
+    stopMusic()
+    MusicNowLbl.Text = "not playing"
+    for _, r in ipairs(musicRefs) do
+        r.btn.BackgroundColor3 = Color3.fromRGB(16,16,16)
+        r.btn.TextColor3       = C.muted
+        r.stroke.Color         = C.divider
+        r.accent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    end
+end)
+
+local MusicScroll = Instance.new("ScrollingFrame", MusicCard)
+MusicScroll.Size                 = UDim2.new(1,-12,0,46)
+MusicScroll.Position             = UDim2.new(0,8,0,50)
+MusicScroll.BackgroundTransparency = 1
+MusicScroll.BorderSizePixel      = 0
+MusicScroll.ScrollBarThickness   = 3
+MusicScroll.ScrollBarImageColor3 = C.cyan
+MusicScroll.CanvasSize           = UDim2.new(0,0,0,0)
+MusicScroll.AutomaticCanvasSize  = Enum.AutomaticSize.X
+MusicScroll.ScrollingDirection   = Enum.ScrollingDirection.X
+
+local MusicLL = Instance.new("UIListLayout", MusicScroll)
+MusicLL.FillDirection     = Enum.FillDirection.Horizontal
+MusicLL.Padding           = UDim.new(0,6)
+MusicLL.VerticalAlignment = Enum.VerticalAlignment.Center
+
+for i, track in ipairs(MUSIC) do
+    local btn = Instance.new("TextButton", MusicScroll)
+    btn.Text             = track.name
+    btn.Font             = Enum.Font.GothamBold
+    btn.TextSize         = 11
+    btn.TextColor3       = C.muted
+    btn.BackgroundColor3 = Color3.fromRGB(16,16,16)
+    btn.Size             = UDim2.new(0, math.max(80, #track.name * 7 + 18), 0, 32)
+    btn.AutoButtonColor  = false
+    btn.BorderSizePixel  = 0
+    makeCorner(btn,5)
+    local st = makeStroke(btn, C.divider, 1)
+    local ac = Instance.new("Frame", btn)
+    ac.Size             = UDim2.new(0,3,1,0)
+    ac.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    ac.BorderSizePixel  = 0
+    makeCorner(ac,2)
+
+    musicRefs[i] = { btn = btn, stroke = st, accent = ac }
+
+    btn.MouseButton1Click:Connect(function()
+        if activeMusic == track then
+            stopMusic()
+            MusicNowLbl.Text = "not playing"
+            for _, r in ipairs(musicRefs) do
+                r.btn.BackgroundColor3 = Color3.fromRGB(16,16,16)
+                r.btn.TextColor3       = C.muted
+                r.stroke.Color         = C.divider
+                r.accent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+            end
+            return
+        end
+        for _, r in ipairs(musicRefs) do
+            r.btn.BackgroundColor3 = Color3.fromRGB(16,16,16)
+            r.btn.TextColor3       = C.muted
+            r.stroke.Color         = C.divider
+            r.accent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        end
+        btn.BackgroundColor3 = C.cyanDim
+        btn.TextColor3       = C.cyan
+        st.Color             = C.cyan
+        ac.BackgroundColor3  = C.cyan
+        playMusic(track)
+        MusicNowLbl.Text = "♫  " .. track.name
+    end)
+end
+
+-- ── NORMAL EMOTES SCROLL LIST ─────────────────────────
+local EScroll = Instance.new("ScrollingFrame", EmotesPage)
+EScroll.Size                 = UDim2.new(1,0,1,-198)
+EScroll.Position             = UDim2.new(0,0,0,198)
+EScroll.BackgroundTransparency = 1
+EScroll.BorderSizePixel      = 0
+EScroll.ScrollBarThickness   = 3
+EScroll.ScrollBarImageColor3 = C.cyan
+EScroll.CanvasSize           = UDim2.new(0,0,0,0)
+EScroll.AutomaticCanvasSize  = Enum.AutomaticSize.Y
+
+local EListLayout = Instance.new("UIListLayout", EScroll)
+EListLayout.Padding = UDim.new(0,0)
+local EScrollPad = Instance.new("UIPadding", EScroll)
+EScrollPad.PaddingBottom = UDim.new(0,10)
+
+-- ── MODIFIED EMOTES SCROLL LIST ───────────────────────
+local ModScroll = Instance.new("ScrollingFrame", EmotesPage)
+ModScroll.Size                 = UDim2.new(1,0,1,-198)
+ModScroll.Position             = UDim2.new(0,0,0,198)
+ModScroll.BackgroundTransparency = 1
+ModScroll.BorderSizePixel      = 0
+ModScroll.ScrollBarThickness   = 3
+ModScroll.ScrollBarImageColor3 = C.cyan
+ModScroll.CanvasSize           = UDim2.new(0,0,0,0)
+ModScroll.AutomaticCanvasSize  = Enum.AutomaticSize.Y
+ModScroll.Visible              = false
+
+local ModListLayout = Instance.new("UIListLayout", ModScroll)
+ModListLayout.Padding = UDim.new(0,0)
+local ModScrollPad = Instance.new("UIPadding", ModScroll)
+ModScrollPad.PaddingBottom = UDim.new(0,10)
+
+-- Sub-tab switching
+local function setEmotesSubTab(name)
+    emotesSubTab        = name
+    EScroll.Visible     = name == "normal"
+    ModScroll.Visible   = name == "modified"
+
+    if name == "normal" then
+        ENormalSubBtn.BackgroundColor3 = C.cyanDim
+        ENormalSubBtn.TextColor3       = C.cyan
+        EModifiedSubBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        EModifiedSubBtn.TextColor3       = C.muted
+    else
+        EModifiedSubBtn.BackgroundColor3 = C.cyanDim
+        EModifiedSubBtn.TextColor3       = C.cyan
+        ENormalSubBtn.BackgroundColor3   = Color3.fromRGB(0,0,0)
+        ENormalSubBtn.TextColor3         = C.muted
+    end
+end
+
+ENormalSubBtn.MouseButton1Click:Connect(function()   setEmotesSubTab("normal")   end)
+EModifiedSubBtn.MouseButton1Click:Connect(function() setEmotesSubTab("modified") end)
+setEmotesSubTab("normal")
+
+-- Shared loop-mode UI sync
+local function updateLoopUI()
+    if eLoopMode then
+        ELoopBtn.BackgroundColor3  = C.cyanDim;               ELoopBtn.TextColor3  = C.white
+        EOnceBtn.BackgroundColor3  = Color3.fromRGB(14,14,14); EOnceBtn.TextColor3  = C.muted
+        HLoopBtn.BackgroundColor3  = C.cyanDim;               HLoopBtn.TextColor3  = C.white
+        HOnceBtn.BackgroundColor3  = Color3.fromRGB(18,18,18); HOnceBtn.TextColor3  = C.muted
+    else
+        EOnceBtn.BackgroundColor3  = C.cyanDim;               EOnceBtn.TextColor3  = C.white
+        ELoopBtn.BackgroundColor3  = Color3.fromRGB(14,14,14); ELoopBtn.TextColor3  = C.muted
+        HOnceBtn.BackgroundColor3  = C.cyanDim;               HOnceBtn.TextColor3  = C.white
+        HLoopBtn.BackgroundColor3  = Color3.fromRGB(18,18,18); HLoopBtn.TextColor3  = C.muted
+    end
+end
+
+ELoopBtn.MouseButton1Click:Connect(function() eLoopMode = true;  updateLoopUI() end)
+EOnceBtn.MouseButton1Click:Connect(function() eLoopMode = false; updateLoopUI() end)
+HLoopBtn.MouseButton1Click:Connect(function() eLoopMode = true;  updateLoopUI() end)
+HOnceBtn.MouseButton1Click:Connect(function() eLoopMode = false; updateLoopUI() end)
+
+-- Build normal emote rows
+for i, emote in ipairs(EMOTES) do
+    local row = Instance.new("TextButton", EScroll)
+    row.Name             = "Row_"..i
+    row.Size             = UDim2.new(1,0,0,52)
+    row.BackgroundColor3 = (i%2==0) and C.rowB or C.rowA
+    row.BorderSizePixel  = 0
+    row.Text             = ""
+    row.AutoButtonColor  = false
+
+    local div = Instance.new("Frame", row)
+    div.Size             = UDim2.new(1,0,0,1)
+    div.Position         = UDim2.new(0,0,1,-1)
+    div.BackgroundColor3 = C.divider
+    div.BorderSizePixel  = 0
+
+    local rowAccent = Instance.new("Frame", row)
+    rowAccent.Size             = UDim2.new(0,3,1,0)
+    rowAccent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    rowAccent.BorderSizePixel  = 0
+
+    local badge = Instance.new("Frame", row)
+    badge.Size             = UDim2.new(0,28,0,28)
+    badge.Position         = UDim2.new(0,14,0.5,-14)
+    badge.BackgroundColor3 = Color3.fromRGB(16,16,16)
+    badge.BorderSizePixel  = 0
+    makeCorner(badge,5)
+    makeStroke(badge, C.divider, 1)
+
+    local badgeLbl = Instance.new("TextLabel", badge)
+    badgeLbl.Text               = tostring(i)
+    badgeLbl.Font               = Enum.Font.GothamBold
+    badgeLbl.TextSize           = 11
+    badgeLbl.TextColor3         = C.muted
+    badgeLbl.BackgroundTransparency = 1
+    badgeLbl.Size               = UDim2.new(1,0,1,0)
+    badgeLbl.TextXAlignment     = Enum.TextXAlignment.Center
+
+    local nameLbl = Instance.new("TextLabel", row)
+    nameLbl.Text               = emote.name
+    nameLbl.Font               = Enum.Font.GothamBold
+    nameLbl.TextSize           = 13
+    nameLbl.TextColor3         = C.white
+    nameLbl.BackgroundTransparency = 1
+    nameLbl.Size               = UDim2.new(1,-100,0,28)
+    nameLbl.Position           = UDim2.new(0,52,0.5,-14)
+    nameLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+    local playBtn = Instance.new("TextButton", row)
+    playBtn.Text             = "▶"
+    playBtn.Font             = Enum.Font.GothamBold
+    playBtn.TextSize         = 14
+    playBtn.TextColor3       = C.muted
+    playBtn.BackgroundColor3 = Color3.fromRGB(16,16,16)
+    playBtn.Size             = UDim2.new(0,32,0,32)
+    playBtn.Position         = UDim2.new(1,-44,0.5,-16)
+    playBtn.BorderSizePixel  = 0
+    makeCorner(playBtn,5)
+    local pStroke = makeStroke(playBtn, C.divider, 1)
+
+    cardRefs[i] = { row=row, badge=badge, badgeLbl=badgeLbl,
+                    playBtn=playBtn, pStroke=pStroke, rowAccent=rowAccent }
+
+    local function onPlay()
+        if activeEmote == emote then stopCurrent(); return end
+        for _, ref in ipairs(cardRefs) do
+            ref.badge.BackgroundColor3     = Color3.fromRGB(16,16,16)
+            ref.badgeLbl.TextColor3        = C.muted
+            ref.playBtn.BackgroundColor3   = Color3.fromRGB(16,16,16)
+            ref.pStroke.Color              = C.divider
+            ref.rowAccent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        end
+        badge.BackgroundColor3     = C.cyanDim
+        badgeLbl.TextColor3        = C.cyan
+        playBtn.BackgroundColor3   = C.cyanDim
+        pStroke.Color              = C.cyan
+        rowAccent.BackgroundColor3 = C.cyan
+        NPDot.BackgroundColor3     = C.cyan
+        playEmote(emote, eLoopMode)
+    end
+
+    playBtn.MouseButton1Click:Connect(onPlay)
+    row.MouseButton1Click:Connect(onPlay)
+
+    row.MouseEnter:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.1), {BackgroundColor3=C.rowHov}):Play()
+    end)
+    row.MouseLeave:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.1), {
+            BackgroundColor3=(i%2==0) and C.rowB or C.rowA
+        }):Play()
+    end)
+end
+
+-- Build modified emote rows
+for i, me in ipairs(MOD_EMOTES) do
+    local row = Instance.new("TextButton", ModScroll)
+    row.Name             = "ModRow_"..i
+    row.Size             = UDim2.new(1,0,0,64)  -- taller for the extra info
+    row.BackgroundColor3 = (i%2==0) and C.rowB or C.rowA
+    row.BorderSizePixel  = 0
+    row.Text             = ""
+    row.AutoButtonColor  = false
+
+    local div = Instance.new("Frame", row)
+    div.Size             = UDim2.new(1,0,0,1)
+    div.Position         = UDim2.new(0,0,1,-1)
+    div.BackgroundColor3 = C.divider
+    div.BorderSizePixel  = 0
+
+    local rowAccent = Instance.new("Frame", row)
+    rowAccent.Size             = UDim2.new(0,3,1,0)
+    rowAccent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    rowAccent.BorderSizePixel  = 0
+
+    local badge = Instance.new("Frame", row)
+    badge.Size             = UDim2.new(0,28,0,28)
+    badge.Position         = UDim2.new(0,14,0.5,-14)
+    badge.BackgroundColor3 = Color3.fromRGB(16,16,16)
+    badge.BorderSizePixel  = 0
+    makeCorner(badge,5)
+    makeStroke(badge, C.divider, 1)
+
+    local badgeLbl = Instance.new("TextLabel", badge)
+    badgeLbl.Text               = tostring(i)
+    badgeLbl.Font               = Enum.Font.GothamBold
+    badgeLbl.TextSize           = 11
+    badgeLbl.TextColor3         = C.muted
+    badgeLbl.BackgroundTransparency = 1
+    badgeLbl.Size               = UDim2.new(1,0,1,0)
+    badgeLbl.TextXAlignment     = Enum.TextXAlignment.Center
+
+    local nameLbl = Instance.new("TextLabel", row)
+    nameLbl.Text               = me.name
+    nameLbl.Font               = Enum.Font.GothamBold
+    nameLbl.TextSize           = 13
+    nameLbl.TextColor3         = C.white
+    nameLbl.BackgroundTransparency = 1
+    nameLbl.Size               = UDim2.new(1,-110,0,20)
+    nameLbl.Position           = UDim2.new(0,52,0,10)
+    nameLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+    -- Shows the loop range
+    local rangeLbl = Instance.new("TextLabel", row)
+    rangeLbl.Text               = string.format("loop  %.2fs → %.2fs", me.loopStart, me.loopEnd)
+    rangeLbl.Font               = Enum.Font.Gotham
+    rangeLbl.TextSize           = 10
+    rangeLbl.TextColor3         = C.cyan
+    rangeLbl.BackgroundTransparency = 1
+    rangeLbl.Size               = UDim2.new(1,-110,0,16)
+    rangeLbl.Position           = UDim2.new(0,52,0,32)
+    rangeLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+    local playBtn = Instance.new("TextButton", row)
+    playBtn.Text             = "▶"
+    playBtn.Font             = Enum.Font.GothamBold
+    playBtn.TextSize         = 14
+    playBtn.TextColor3       = C.muted
+    playBtn.BackgroundColor3 = Color3.fromRGB(16,16,16)
+    playBtn.Size             = UDim2.new(0,32,0,32)
+    playBtn.Position         = UDim2.new(1,-44,0.5,-16)
+    playBtn.BorderSizePixel  = 0
+    makeCorner(playBtn,5)
+    local pStroke = makeStroke(playBtn, C.divider, 1)
+
+    modCardRefs[i] = { row=row, badge=badge, badgeLbl=badgeLbl,
+                       playBtn=playBtn, pStroke=pStroke, rowAccent=rowAccent }
+
+    local function onModPlay()
+        if modEmote == me then stopModEmote(); return end
+        -- Clear all mod card highlights
+        for _, ref in ipairs(modCardRefs) do
+            ref.badge.BackgroundColor3     = Color3.fromRGB(16,16,16)
+            ref.badgeLbl.TextColor3        = C.muted
+            ref.playBtn.BackgroundColor3   = Color3.fromRGB(16,16,16)
+            ref.pStroke.Color              = C.divider
+            ref.rowAccent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        end
+        -- Highlight active row
+        badge.BackgroundColor3     = C.cyanDim
+        badgeLbl.TextColor3        = C.cyan
+        playBtn.BackgroundColor3   = C.cyanDim
+        pStroke.Color              = C.cyan
+        rowAccent.BackgroundColor3 = C.cyan
+        NPDot.BackgroundColor3     = C.cyan
+        playModEmote(me)
+    end
+
+    playBtn.MouseButton1Click:Connect(onModPlay)
+    row.MouseButton1Click:Connect(onModPlay)
+
+    row.MouseEnter:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.1), {BackgroundColor3=C.rowHov}):Play()
+    end)
+    row.MouseLeave:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.1), {
+            BackgroundColor3=(i%2==0) and C.rowB or C.rowA
+        }):Play()
+    end)
+end
+
+-- ══════════════════════════════════════════════════════
+--  SCRIPTS PAGE
+-- ══════════════════════════════════════════════════════
+local ScriptsPage = Instance.new("Frame", Content)
+ScriptsPage.Size              = UDim2.new(1,0,1,0)
+ScriptsPage.BackgroundTransparency = 1
+ScriptsPage.Visible           = false
+
+local ScriptTopBar = Instance.new("Frame", ScriptsPage)
+ScriptTopBar.Size             = UDim2.new(1,-28,0,28)
+ScriptTopBar.Position         = UDim2.new(0,14,0,10)
+ScriptTopBar.BackgroundTransparency = 1
+
+local ScriptCountLbl = Instance.new("TextLabel", ScriptTopBar)
+ScriptCountLbl.Text               = #SCRIPTS.." SCRIPTS"
+ScriptCountLbl.Font               = Enum.Font.GothamBold
+ScriptCountLbl.TextSize           = 9
+ScriptCountLbl.TextColor3         = C.muted
+ScriptCountLbl.BackgroundTransparency = 1
+ScriptCountLbl.Size               = UDim2.new(1,0,1,0)
+ScriptCountLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+local Toast = Instance.new("Frame", ScriptsPage)
+Toast.Size             = UDim2.new(1,-28,0,30)
+Toast.Position         = UDim2.new(0,14,1,6)
+Toast.BackgroundColor3 = C.panel
+Toast.BorderSizePixel  = 0
+Toast.ZIndex           = 20
+makeCorner(Toast,6)
+makeStroke(Toast, C.cyan, 1, 0.3)
+
+local ToastLbl = Instance.new("TextLabel", Toast)
+ToastLbl.Text               = ""
+ToastLbl.Font               = Enum.Font.GothamBold
+ToastLbl.TextSize           = 11
+ToastLbl.TextColor3         = C.white
+ToastLbl.BackgroundTransparency = 1
+ToastLbl.Size               = UDim2.new(1,-16,1,0)
+ToastLbl.Position           = UDim2.new(0,10,0,0)
+ToastLbl.TextXAlignment     = Enum.TextXAlignment.Left
+ToastLbl.ZIndex             = 21
+
+local toastActive = false
+local function showToast(msg, isErr)
+    ToastLbl.Text       = msg
+    ToastLbl.TextColor3 = isErr and C.cyan or Color3.fromRGB(0,220,180)
+    makeStroke(Toast, isErr and C.cyan or Color3.fromRGB(0,140,120), 1, 0.3)
+    toastActive = true
+    TweenService:Create(Toast, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
+        Position = UDim2.new(0,14,1,-38)
+    }):Play()
+    task.delay(2.2, function()
+        TweenService:Create(Toast, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {
+            Position = UDim2.new(0,14,1,6)
+        }):Play()
+        task.wait(0.25); toastActive = false
+    end)
+end
+
+local SScroll = Instance.new("ScrollingFrame", ScriptsPage)
+SScroll.Size                 = UDim2.new(1,0,1,-48)
+SScroll.Position             = UDim2.new(0,0,0,48)
+SScroll.BackgroundTransparency = 1
+SScroll.BorderSizePixel      = 0
+SScroll.ScrollBarThickness   = 3
+SScroll.ScrollBarImageColor3 = C.cyan
+SScroll.CanvasSize           = UDim2.new(0,0,0,0)
+SScroll.AutomaticCanvasSize  = Enum.AutomaticSize.Y
+
+local SListLayout = Instance.new("UIListLayout", SScroll)
+SListLayout.Padding = UDim.new(0,0)
+local SScrollPad = Instance.new("UIPadding", SScroll)
+SScrollPad.PaddingBottom = UDim.new(0,44)
+
+for i, scr in ipairs(SCRIPTS) do
+    local row = Instance.new("Frame", SScroll)
+    row.Size             = UDim2.new(1,0,0,62)
+    row.BackgroundColor3 = (i%2==0) and C.rowB or C.rowA
+    row.BorderSizePixel  = 0
+
+    local div = Instance.new("Frame", row)
+    div.Size             = UDim2.new(1,0,0,1)
+    div.Position         = UDim2.new(0,0,1,-1)
+    div.BackgroundColor3 = C.divider
+    div.BorderSizePixel  = 0
+
+    local rowAccent = Instance.new("Frame", row)
+    rowAccent.Name             = "Accent"
+    rowAccent.Size             = UDim2.new(0,3,1,0)
+    rowAccent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    rowAccent.BorderSizePixel  = 0
+
+    local badge = Instance.new("Frame", row)
+    badge.Size             = UDim2.new(0,26,0,26)
+    badge.Position         = UDim2.new(0,14,0.5,-13)
+    badge.BackgroundColor3 = Color3.fromRGB(14,14,14)
+    badge.BorderSizePixel  = 0
+    makeCorner(badge,5)
+    makeStroke(badge, C.divider, 1)
+
+    local badgeLbl = Instance.new("TextLabel", badge)
+    badgeLbl.Text               = tostring(i)
+    badgeLbl.Font               = Enum.Font.GothamBold
+    badgeLbl.TextSize           = 10
+    badgeLbl.TextColor3         = C.muted
+    badgeLbl.BackgroundTransparency = 1
+    badgeLbl.Size               = UDim2.new(1,0,1,0)
+    badgeLbl.TextXAlignment     = Enum.TextXAlignment.Center
+
+    local nameLbl = Instance.new("TextLabel", row)
+    nameLbl.Text               = scr.name
+    nameLbl.Font               = Enum.Font.GothamBold
+    nameLbl.TextSize           = 13
+    nameLbl.TextColor3         = C.white
+    nameLbl.BackgroundTransparency = 1
+    nameLbl.Size               = UDim2.new(1,-130,0,18)
+    nameLbl.Position           = UDim2.new(0,50,0,10)
+    nameLbl.TextXAlignment     = Enum.TextXAlignment.Left
+
+    local descLbl = Instance.new("TextLabel", row)
+    descLbl.Text               = scr.desc
+    descLbl.Font               = Enum.Font.Gotham
+    descLbl.TextSize           = 10
+    descLbl.TextColor3         = C.muted
+    descLbl.BackgroundTransparency = 1
+    descLbl.Size               = UDim2.new(1,-130,0,26)
+    descLbl.Position           = UDim2.new(0,50,0,30)
+    descLbl.TextXAlignment     = Enum.TextXAlignment.Left
+    descLbl.TextWrapped        = true
+
+    local runBtn = Instance.new("TextButton", row)
+    runBtn.Text             = "▶  RUN"
+    runBtn.Font             = Enum.Font.GothamBold
+    runBtn.TextSize         = 11
+    runBtn.TextColor3       = C.white
+    runBtn.BackgroundColor3 = C.cyanDim
+    runBtn.Size             = UDim2.new(0,68,0,26)
+    runBtn.Position         = UDim2.new(1,-80,0.5,-13)
+    runBtn.BorderSizePixel  = 0
+    makeCorner(runBtn,5)
+    makeStroke(runBtn, C.cyan, 1, 0.4)
+    runBtn.AutoButtonColor = false
+
+    row.MouseEnter:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.1), {BackgroundColor3=C.rowHov}):Play()
+    end)
+    row.MouseLeave:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.1), {
+            BackgroundColor3=(i%2==0) and C.rowB or C.rowA
+        }):Play()
+    end)
+
+    runBtn.MouseButton1Click:Connect(function()
+        rowAccent.BackgroundColor3 = C.cyan
+        runBtn.Text             = "..."
+        runBtn.BackgroundColor3 = C.cyanDk
+
+        task.spawn(function()
+            local ok, src = pcall(function() return game:HttpGet(scr.url) end)
+            if not ok or not src or src == "" then
+                rowAccent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+                runBtn.Text = "▶  RUN"; runBtn.BackgroundColor3 = C.cyanDim
+                showToast("✗  failed to fetch: "..scr.name, true); return
+            end
+            local fn, err = loadstring(src)
+            if not fn then
+                rowAccent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+                runBtn.Text = "▶  RUN"; runBtn.BackgroundColor3 = C.cyanDim
+                showToast("✗  loadstring error", true); warn("[Frozxcutor]", err); return
+            end
+            local ok2, err2 = pcall(fn)
+            rowAccent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+            if ok2 then
+                runBtn.Text = "✓"; runBtn.BackgroundColor3 = Color3.fromRGB(0,50,50)
+                showToast("✓  "..scr.name.." loaded", false)
+                task.delay(2, function() runBtn.Text="▶  RUN"; runBtn.BackgroundColor3=C.cyanDim end)
+            else
+                runBtn.Text = "✗"; runBtn.BackgroundColor3 = C.cyanDk
+                showToast("✗  runtime error", true); warn("[Frozxcutor]", err2)
+                task.delay(2, function() runBtn.Text="▶  RUN"; runBtn.BackgroundColor3=C.cyanDim end)
+            end
+        end)
+    end)
+end
+
+-- ══════════════════════════════════════════════════════
+--  TAB SWITCHING
+-- ══════════════════════════════════════════════════════
+local function setTab(name)
+    currentTab          = name
+    HomePage.Visible    = name == "home"
+    EmotesPage.Visible  = name == "emotes"
+    ScriptsPage.Visible = name == "scripts"
+    local tabs = {
+        { btn=HomeTabBtn,    id="home",    x=10  },
+        { btn=EmotesTabBtn,  id="emotes",  x=110 },
+        { btn=ScriptsTabBtn, id="scripts", x=210 },
+    }
+    for _, t in ipairs(tabs) do
+        if t.id == name then
+            t.btn.TextColor3 = C.white
+            TweenService:Create(TabIndicator, TweenInfo.new(0.18, Enum.EasingStyle.Quart), {
+                Position = UDim2.new(0, t.x+10, 1, -2),
+                Size     = UDim2.new(0,80,0,2),
+            }):Play()
+        else
+            t.btn.TextColor3 = C.muted
+        end
+    end
+end
+
+setTab("home")
+HomeTabBtn.MouseButton1Click:Connect(function()    setTab("home")    end)
+EmotesTabBtn.MouseButton1Click:Connect(function()  setTab("emotes")  end)
+ScriptsTabBtn.MouseButton1Click:Connect(function() setTab("scripts") end)
+
+-- ══════════════════════════════════════════════════════
+--  LIVE NOW PLAYING (home card sync)
+-- ══════════════════════════════════════════════════════
+RunService.Heartbeat:Connect(function()
+    local anyActive = activeEmote or modEmote
+    if anyActive then
+        NPNameLbl.Text         = anyActive.name
+        NPDot.BackgroundColor3 = C.cyan
+    else
+        NPNameLbl.Text         = "idle"
+        NPDot.BackgroundColor3 = C.muted
+        -- Clear normal card highlights when nothing playing
+        for _, ref in ipairs(cardRefs) do
+            ref.badge.BackgroundColor3     = Color3.fromRGB(16,16,16)
+            ref.badgeLbl.TextColor3        = C.muted
+            ref.playBtn.BackgroundColor3   = Color3.fromRGB(16,16,16)
+            ref.pStroke.Color              = C.divider
+            ref.rowAccent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        end
+        -- Clear modified card highlights
+        for _, ref in ipairs(modCardRefs) do
+            ref.badge.BackgroundColor3     = Color3.fromRGB(16,16,16)
+            ref.badgeLbl.TextColor3        = C.muted
+            ref.playBtn.BackgroundColor3   = Color3.fromRGB(16,16,16)
+            ref.pStroke.Color              = C.divider
+            ref.rowAccent.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        end
+    end
+end)
+
+-- ══════════════════════════════════════════════════════
+--  TOGGLE KEYBIND  (RightAlt)
+-- ══════════════════════════════════════════════════════
+local function isOverWin()
+    local mp = UserInputService:GetMouseLocation()
+    local pos = Win.AbsolutePosition
+    local size = Win.AbsoluteSize
+    return mp.X >= pos.X and mp.X <= pos.X + size.X and mp.Y >= pos.Y and mp.Y <= pos.Y + size.Y
+end
+
+UserInputService.InputBegan:Connect(function(inp, gp)
+    if gp then return end
+    if inp.UserInputType == Enum.UserInputType.MouseButton1 and isOverWin() then
+        isDragging = true
+        local mp = UserInputService:GetMouseLocation()
+        dragOffset = mp - Vector2.new(Win.AbsolutePosition.X, Win.AbsolutePosition.Y)
+    end
+end)
+UserInputService.InputChanged:Connect(function(inp)
+    if isDragging and inp.UserInputType == Enum.UserInputType.MouseMovement then
+        local mp = UserInputService:GetMouseLocation()
+        local p = mp - dragOffset
+        Win.Position = UDim2.new(0, p.X, 0, p.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(inp)
+    if inp.UserInputType == Enum.UserInputType.MouseButton1 then
+        isDragging = false
+    end
+end)
+
+-- ══════════════════════════════════════════════════════
+--  LOADING SEQUENCE
+-- ══════════════════════════════════════════════════════
+task.spawn(function()
+    local steps = {
+        { pct=0.25, msg="loading emotes..."   },
+        { pct=0.55, msg="loading music..."    },
+        { pct=0.85, msg="loading scripts..."  },
+        { pct=1.0,  msg="done."               },
+    }
+    task.wait(0.2)
+    for _, step in ipairs(steps) do
+        LoadSub.Text = step.msg
+        TweenService:Create(BarFill, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(step.pct,0,1,0)
+        }):Play()
+        task.wait(0.45)
+    end
+    task.wait(0.3)
+    TweenService:Create(LoadFrame, TweenInfo.new(0.4), {BackgroundTransparency=1}):Play()
+    for _, d in ipairs(LoadFrame:GetDescendants()) do
+        if d:IsA("TextLabel") then
+            TweenService:Create(d, TweenInfo.new(0.3), {TextTransparency=1}):Play()
+        elseif d:IsA("Frame") then
+            TweenService:Create(d, TweenInfo.new(0.3), {BackgroundTransparency=1}):Play()
+        end
+    end
+    task.wait(0.45)
+    LoadFrame:Destroy()
+    Win.Visible = true
+    Win.Size    = UDim2.new(0,410,0,620)
+    TweenService:Create(Win, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0,420,0,640)
+    }):Play()
+end)
+
+print("[Frozxcutor v1.2] ready")
