@@ -1,7 +1,3 @@
--- FROZXCUTOR v1.2
--- LocalScript → StarterPlayerScripts
--- RightAlt = toggle | Drag titlebar to move
-
 local Players          = game:GetService("Players")
 local TweenService     = game:GetService("TweenService")
 local RunService       = game:GetService("RunService")
@@ -13,6 +9,21 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid  = character:WaitForChild("Humanoid")
 local animator  = humanoid:WaitForChild("Animator")
 
+player.CharacterAdded:Connect(function(newChar)
+    -- nil these out first so Stopped callbacks don't do anything
+    currentTrack = nil
+    modTrack     = nil
+
+    stopCurrent()
+    stopModEmote()
+
+    character = newChar
+    humanoid  = newChar:WaitForChild("Humanoid")
+    animator  = humanoid:WaitForChild("Animator")
+
+    humanoid.WalkSpeed = 16
+    humanoid.JumpPower = 50
+end)
 -- ══════════════════════════════════════════════════════
 --  EMOTES
 -- ══════════════════════════════════════════════════════
@@ -25,6 +36,8 @@ local EMOTES = {
     { id = "rbxassetid://83341137622668",  name = "Mid Bend"          },
     { id = "rbxassetid://114603395814889", name = "Hip Sway"          },
     { id = "rbxassetid://91533128194560",  name = "Shaking Yams"      },
+    { id = "rbxassetid://111906563478881",  name = "Windy Balnce"     },
+    { id = "rbxassetid://95050704890144",  name = "Semi Twerk"        },
 }
 
 -- ══════════════════════════════════════════════════════
@@ -165,9 +178,12 @@ local function playEmote(emote, loop)
     anim:Destroy()
     freezePlayer(true)
     if not loop then
+        local savedTrack = track  -- capture this specific track
         track.Stopped:Connect(function()
-            activeEmote = nil
-            freezePlayer(false)
+            if currentTrack == savedTrack then  -- only act if still the active track
+                activeEmote = nil
+                freezePlayer(false)
+            end
         end)
     end
 end
